@@ -1,1 +1,1 @@
-GET http://localhost:5000
+GET http://localhost:5000/all-users/cucu@cubarsi.com

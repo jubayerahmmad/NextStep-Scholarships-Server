@@ -16,7 +16,7 @@ const verifyToken = (req, res, next) => {
     return res.status(401).send({ message: "Unauthorized User" });
   }
   const token = req.headers?.authorization.split(" ")[1];
-  console.log(token);
+  // console.log(token);
   jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).send({ message: "Unauthorized User" });
@@ -65,7 +65,6 @@ async function run() {
     app.post("/save-user/:email", async (req, res) => {
       const email = req.params.email;
       const userInfo = req.body;
-      // console.log(userInfo);
 
       // validate if user already exists
       const isExist = await usersCollection.findOne({ email });
@@ -75,6 +74,17 @@ async function run() {
         ...userInfo,
         role: "User",
       });
+      res.send(result);
+    });
+
+    //  get all user data
+    app.get("/all-users/:email", verifyToken, async (req, res) => {
+      const email = req?.params?.email;
+      const result = await usersCollection
+        .find({ email: { $ne: email } })
+        .toArray();
+      // console.log(result);
+
       res.send(result);
     });
   } finally {
