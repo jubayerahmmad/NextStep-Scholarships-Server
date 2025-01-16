@@ -84,8 +84,15 @@ async function run() {
         .find({ email: { $ne: email } })
         .toArray();
       // console.log(result);
-
       res.send(result);
+    });
+
+    // get user role
+    app.get("/user-role/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const user = await usersCollection.findOne({ email });
+
+      res.send({ role: user?.role });
     });
   } finally {
     // Ensures that the client will close when you finish/error
