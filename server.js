@@ -11,6 +11,21 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const verifyToken = (req, res, next) => {
+  if (!req.headers.authorization) {
+    return res.status(401).send({ message: "Unauthorized User" });
+  }
+  const token = req.headers?.authorization.split(" ")[1];
+  console.log(token);
+  jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "Unauthorized User" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@nextstep-scholarships.bha7w.mongodb.net/?retryWrites=true&w=majority&appName=NextStep-Scholarships`;
 
 const client = new MongoClient(uri, {
@@ -32,6 +47,15 @@ async function run() {
 
     const db = client.db("NextStep-Scholarships");
     // ---------- COLLECTIONS ----------
+
+    // -----JWT------
+    app.post("/jwt", (req, res) => {
+      const userEmail = req.body;
+      const token = jwt.sign(userEmail, process.env.TOKEN_SECRET, {
+        expiresIn: "365d",
+      });
+      res.send({ token });
+    });
   } finally {
     // Ensures that the client will close when you finish/error
   }
