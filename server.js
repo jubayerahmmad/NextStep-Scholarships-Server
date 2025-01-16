@@ -47,7 +47,10 @@ async function run() {
 
     const db = client.db("NextStep-Scholarships");
     // ---------- COLLECTIONS ----------
-
+    const usersCollection = db.collection("users");
+    const allScholarshipsCollection = db.collection("all-scholarships");
+    const appliedScholarshipsCollection = db.collection("applied-scholarships");
+    const reviewsCollection = db.collection("reviews");
     // -----JWT------
     app.post("/jwt", (req, res) => {
       const userEmail = req.body;
@@ -55,6 +58,24 @@ async function run() {
         expiresIn: "365d",
       });
       res.send({ token });
+    });
+
+    // ----------USER APIs----------
+    //save a user to db
+    app.post("/save-user/:email", async (req, res) => {
+      const email = req.params.email;
+      const userInfo = req.body;
+      // console.log(userInfo);
+
+      // validate if user already exists
+      const isExist = await usersCollection.findOne({ email });
+      if (isExist) return res.send(isExist);
+
+      const result = await usersCollection.insertOne({
+        ...userInfo,
+        role: "User",
+      });
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
