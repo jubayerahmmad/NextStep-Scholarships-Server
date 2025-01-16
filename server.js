@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 
@@ -80,8 +80,14 @@ async function run() {
     //  get all user data
     app.get("/all-users/:email", verifyToken, async (req, res) => {
       const email = req?.params?.email;
+      const sort = req.query.sort;
+      let sortByRole = {};
+      if (sort) {
+        sortByRole = { role: sort };
+      }
       const result = await usersCollection
         .find({ email: { $ne: email } })
+        .sort(sortByRole)
         .toArray();
       // console.log(result);
       res.send(result);
@@ -93,6 +99,27 @@ async function run() {
       const user = await usersCollection.findOne({ email });
 
       res.send({ role: user?.role });
+    });
+
+    // handle user role
+    app.patch("/update-role/:email", verifyToken, async (req, res) => {
+      const email = req?.params?.email;
+      const { role } = req.body;
+
+      const filter = { email };
+      const updatedDoc = {
+        $set: {
+          role,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    app.delete("/delete-user/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
