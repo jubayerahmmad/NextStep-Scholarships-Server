@@ -136,16 +136,29 @@ async function run() {
       const result = await allScholarshipsCollection.find().toArray();
       res.send(result);
     });
+    // get all scholarship for admins
+    app.get("/scholarship-admin-access", verifyToken, async (req, res) => {
+      const result = await allScholarshipsCollection.find().toArray();
+      res.send(result);
+    });
 
     // get top 6 scholarship
     app.get("/top-scholarships", async (req, res) => {});
 
-    // get specific schoalrship by id
+    // get specific scholarship by id
     app.get("/scholarship/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const scholarship = await allScholarshipsCollection.findOne(query);
       res.send(scholarship);
+    });
+
+    // delete specific scholarship by id
+    app.delete("/delete-scholarship/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await allScholarshipsCollection.deleteOne(query);
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
