@@ -81,15 +81,20 @@ async function run() {
     app.get("/all-users/:email", verifyToken, async (req, res) => {
       const email = req?.params?.email;
       const sort = req.query.sort;
-      let sortByRole = {};
-      if (sort) {
-        sortByRole = { role: sort };
-      }
+
       const result = await usersCollection
         .find({ email: { $ne: email } })
-        .sort(sortByRole)
         .toArray();
-      // console.log(result);
+
+      //  sort order
+      if (sort) {
+        const roleOrder = { Admin: 1, Moderator: 2, User: 3 };
+        const sortOrder = sort === "asc" ? 1 : -1;
+        result.sort((a, b) => {
+          return roleOrder[a.role] - roleOrder[b.role] * sortOrder;
+        });
+      }
+
       res.send(result);
     });
 
@@ -97,7 +102,6 @@ async function run() {
     app.get("/user-role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const user = await usersCollection.findOne({ email });
-
       res.send({ role: user?.role });
     });
 
