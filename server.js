@@ -131,20 +131,27 @@ async function run() {
       res.send(result);
     });
 
-    // get all scholarship
-    app.get("/scholarships", async (req, res) => {
-      const result = await allScholarshipsCollection.find().toArray();
-      res.send(result);
-    });
-
     // get all scholarship for admins
     app.get("/scholarship-admin-access", verifyToken, async (req, res) => {
       const result = await allScholarshipsCollection.find().toArray();
       res.send(result);
     });
 
-    // get top 6 scholarship
-    app.get("/top-scholarships", async (req, res) => {});
+    // get all scholarship
+    app.get("/scholarships", async (req, res) => {
+      const result = await allScholarshipsCollection.find().toArray();
+      res.send(result);
+    });
+
+    //TODO: get top 6 scholarship based on lowest application fees and  latest postedDate
+    app.get("/top-scholarships", async (req, res) => {
+      const result = await allScholarshipsCollection
+        .find()
+        .limit(6)
+        .sort({ applicationFees: 1, postDate: -1 })
+        .toArray();
+      res.send(result);
+    });
 
     // get specific scholarship by id
     app.get("/scholarship/:id", async (req, res) => {
