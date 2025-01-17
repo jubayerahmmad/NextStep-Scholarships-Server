@@ -136,6 +136,7 @@ async function run() {
       const result = await allScholarshipsCollection.find().toArray();
       res.send(result);
     });
+
     // get all scholarship for admins
     app.get("/scholarship-admin-access", verifyToken, async (req, res) => {
       const result = await allScholarshipsCollection.find().toArray();
@@ -151,6 +152,41 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const scholarship = await allScholarshipsCollection.findOne(query);
       res.send(scholarship);
+    });
+
+    // update scholarship
+    app.put("/update-scholarship/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          description: updatedData.description,
+          applicationFees: updatedData.applicationFees,
+          universityName: updatedData.universityName,
+          subjectCategory: updatedData.subjectCategory,
+          applicationDeadline: updatedData.applicationDeadline,
+          scholarshipCategory: updatedData.scholarshipCategory,
+          city: updatedData.city,
+          country: updatedData.country,
+          scholarshipName: updatedData.scholarshipName,
+          subjectName: updatedData.subjectName,
+          stipend: updatedData.stipend,
+          worldRank: updatedData.worldRank,
+          degree: updatedData.degree,
+          tuitionFees: updatedData.tuitionFees,
+          serviceCharge: updatedData.serviceCharge,
+          email: updatedData.email,
+          postDate: updatedData.postDate,
+          image: updatedData.image,
+        },
+      };
+      const result = await allScholarshipsCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+
+      res.send(result);
     });
 
     // delete specific scholarship by id
