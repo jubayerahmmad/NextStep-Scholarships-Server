@@ -136,6 +136,17 @@ async function run() {
       const result = await allScholarshipsCollection.find().toArray();
       res.send(result);
     });
+
+    // get top 6 scholarship
+    app.get("/top-scholarships", async (req, res) => {});
+
+    // get specific schoalrship by id
+    app.get("/scholarship/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const scholarship = await allScholarshipsCollection.findOne(query);
+      res.send(scholarship);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
   }
