@@ -82,18 +82,13 @@ async function run() {
       const email = req?.params?.email;
       const sort = req.query.sort;
 
-      const result = await usersCollection
-        .find({ email: { $ne: email } })
-        .toArray();
+      let query = { email: { $ne: email } };
 
-      //  sort order
       if (sort) {
-        const roleOrder = { Admin: 1, Moderator: 2, User: 3 };
-        const sortOrder = sort === "asc" ? 1 : -1;
-        result.sort((a, b) => {
-          return roleOrder[a.role] - roleOrder[b.role] * sortOrder;
-        });
+        query.role = sort;
       }
+
+      const result = await usersCollection.find(query).toArray();
 
       res.send(result);
     });
@@ -120,9 +115,25 @@ async function run() {
       res.send(result);
     });
 
+    // delete user
     app.delete("/delete-user/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+    //  ----------- ALL SCHOLARSHIPS APIs -----------
+
+    // save a scholarship
+    app.post("/add-scholarship", verifyToken, async (req, res) => {
+      const scholarshipData = req.body;
+      const result = await allScholarshipsCollection.insertOne(scholarshipData);
+      res.send(result);
+    });
+
+    // get all scholarship
+    app.get("/scholarships", async (req, res) => {
+      const result = await allScholarshipsCollection.find().toArray();
       res.send(result);
     });
   } finally {
