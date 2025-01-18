@@ -139,7 +139,22 @@ async function run() {
 
     // get all scholarship
     app.get("/scholarships", async (req, res) => {
-      const result = await allScholarshipsCollection.find().toArray();
+      const { search } = req.query;
+
+      let query = {};
+
+      if (search) {
+        query = {
+          //The $or operator takes an array of conditions. It matches a document if at least one of the conditions in the array is true.
+          $or: [
+            { scholarshipName: { $regex: search, $options: "i" } },
+            { degree: { $regex: search, $options: "i" } },
+            { universityName: { $regex: search, $options: "i" } },
+          ],
+        };
+      }
+
+      const result = await allScholarshipsCollection.find(query).toArray();
       res.send(result);
     });
 
