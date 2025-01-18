@@ -3,6 +3,7 @@ const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -217,6 +218,23 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await allScholarshipsCollection.deleteOne(query);
       res.send(result);
+    });
+
+    //  --------PAYMENT----------
+    app.post("/create-payment-intent", verifyToken, async (req, res) => {
+      const { fee } = req.body;
+      const totalFee = fee * 100;
+      // console.log(totalFee);
+
+      const { client_secret } = await stripe.paymentIntents.create({
+        amount: totalFee,
+        currency: "usd",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      // console.log(paymentIntent);
+      res.send(client_secret);
     });
   } finally {
     // Ensures that the client will close when you finish/error
