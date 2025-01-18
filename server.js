@@ -39,9 +39,9 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
@@ -330,6 +330,29 @@ async function run() {
         filter,
         updatedDoc
       );
+      res.send(result);
+    });
+
+    //  ------------REVIEWS APIs------------
+
+    // save reviews
+    app.post("/add-review", verifyToken, async (req, res) => {
+      const reviewData = req.body;
+      const result = await reviewsCollection.insertOne(reviewData);
+      res.send(result);
+    });
+    // get all reviews
+    app.get("/reviews", verifyToken, async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
+      res.send(result);
+    });
+    // get reviews by specific user
+    app.get("/my-reviews/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = {
+        reviewerEmail: email,
+      };
+      const result = await reviewsCollection.find(query).toArray();
       res.send(result);
     });
   } finally {
