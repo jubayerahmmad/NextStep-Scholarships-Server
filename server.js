@@ -94,6 +94,14 @@ async function run() {
       res.send(result);
     });
 
+    // get a specific user  data by email
+    app.get("/user/:email", async (req, res) => {
+      const email = req?.params?.email;
+      const query = { email };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+
     // get user role
     app.get("/user-role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -224,7 +232,6 @@ async function run() {
     app.post("/create-payment-intent", verifyToken, async (req, res) => {
       const { fee } = req.body;
       const totalFee = fee * 100;
-      // console.log(totalFee);
 
       const { client_secret } = await stripe.paymentIntents.create({
         amount: totalFee,
@@ -235,6 +242,42 @@ async function run() {
       });
       // console.log(paymentIntent);
       res.send(client_secret);
+    });
+
+    // ------------APPLIED SCHOLARSHIPS APIs-----------
+    // save applied scholarship details
+    app.post("/applied-scholarships", verifyToken, async (req, res) => {
+      const applyData = req.body;
+      //TODO: prevent multiple apply to the same scholarship
+      // const query = { _id: new ObjectId(applyData.scholarshipId) };
+
+      // const applied = await appliedScholarshipsCollection.findOne(query);
+      // if (applied) {
+      //   return res.send({
+      //     message: "You have Already Applied to this Scholarship",
+      //   });
+      // }
+
+      const result = await appliedScholarshipsCollection.insertOne({
+        ...applyData,
+        status: "Pending",
+      });
+      res.send(result);
+    });
+
+    // get applied scholarship by email
+    app.get("/my-applications/:email", verifyToken, async (req, res) => {
+      const email = req?.params?.email;
+      const result = await appliedScholarshipsCollection
+        .find({ applicantEmail: email })
+        .toArray();
+      res.send(result);
+    });
+
+    // get all applied scholarships
+    app.get("/applied-scholarships", verifyToken, async (req, res) => {
+      const result = await appliedScholarshipsCollection.find().toArray();
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
