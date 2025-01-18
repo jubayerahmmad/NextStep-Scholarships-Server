@@ -279,6 +279,42 @@ async function run() {
       const result = await appliedScholarshipsCollection.find().toArray();
       res.send(result);
     });
+
+    // get applied scholarship by id
+    app.get("/applied-scholarship/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const result = await appliedScholarshipsCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
+
+    // change status of application
+    app.patch("/change-status/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const { status } = req.body;
+      const filter = { _id: new ObjectId(id) };
+
+      const updatedDoc = {
+        $set: {
+          status,
+        },
+      };
+
+      const result = await appliedScholarshipsCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
+
+    // delete appliation
+    // app.delete("/delete-application/:id", verifyToken, async (req, res) => {
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const result = await appliedScholarshipsCollection.deleteOne(query);
+    //   res.send(result);
+    // });
   } finally {
     // Ensures that the client will close when you finish/error
   }
