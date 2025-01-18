@@ -308,13 +308,30 @@ async function run() {
       res.send(result);
     });
 
-    // delete appliation
-    // app.delete("/delete-application/:id", verifyToken, async (req, res) => {
-    //   const id = req.params.id;
-    //   const query = { _id: new ObjectId(id) };
-    //   const result = await appliedScholarshipsCollection.deleteOne(query);
-    //   res.send(result);
-    // });
+    // delete application
+    app.delete("/delete-application/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await appliedScholarshipsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // add feedback
+    app.patch("/add-feedback/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const { feedback } = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          feedback,
+        },
+      };
+      const result = await appliedScholarshipsCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
   }
