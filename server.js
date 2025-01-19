@@ -318,6 +318,38 @@ async function run() {
       res.send(result);
     });
 
+    // update application data
+    app.patch("/update-application/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const {
+        city,
+        country,
+        studyGap,
+        sscResult,
+        applicantPhone,
+        gender,
+        hscResult,
+      } = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          applicantPhone,
+          city,
+          country,
+          sscResult,
+          hscResult,
+          studyGap,
+          gender,
+        },
+      };
+
+      const result = await appliedScholarshipsCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
+
     // change status of application
     app.patch("/change-status/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
