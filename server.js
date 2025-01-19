@@ -336,8 +336,19 @@ async function run() {
     //  ------------REVIEWS APIs------------
 
     // save reviews
-    app.post("/add-review", verifyToken, async (req, res) => {
+    app.post("/add-review/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
       const reviewData = req.body;
+      // check if already reviewed to the scholarship
+      const query = {
+        scholarshipId: id,
+        reviewerEmail: reviewData?.reviewerEmail,
+      };
+      const review = await reviewsCollection.findOne(query);
+
+      if (review) {
+        return res.status(400).send({ message: "Review Already Given!" });
+      }
       const result = await reviewsCollection.insertOne(reviewData);
       res.send(result);
     });
@@ -353,6 +364,22 @@ async function run() {
         reviewerEmail: email,
       };
       const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // get reviews by specific id
+    app.get("/reviews/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { scholarshipId: id };
+      const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // delete a review
+    app.delete("/delete-review/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollection.deleteOne(query);
       res.send(result);
     });
   } finally {
