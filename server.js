@@ -122,7 +122,7 @@ async function run() {
       res.send({ role: user?.role });
     });
 
-    // handle user role
+    // update user role
     app.patch("/update-role/:email", verifyToken, async (req, res) => {
       const email = req?.params?.email;
       const { role } = req.body;
@@ -262,11 +262,14 @@ async function run() {
     app.post("/applied-scholarships", verifyToken, async (req, res) => {
       const applyData = req.body;
       //TODO: prevent multiple apply to the same scholarship
-      // const query = { _id: new ObjectId(applyData.scholarshipId) };
+      // const query = {
+      //   scholarshipId: applyData.scholarshipId,
+      //   applicantEmail: applyData.applicantEmail,
+      // };
 
       // const applied = await appliedScholarshipsCollection.findOne(query);
       // if (applied) {
-      //   return res.send({
+      //   return res.status(400).send({
       //     message: "You have Already Applied to this Scholarship",
       //   });
       // }
@@ -289,7 +292,20 @@ async function run() {
 
     // get all applied scholarships
     app.get("/applied-scholarships", verifyToken, async (req, res) => {
-      const result = await appliedScholarshipsCollection.find().toArray();
+      const date = req.query?.date;
+
+      let query = {};
+      if (date === "applicationDeadline") {
+        query = { applicationDeadline: 1 };
+      }
+      if (date === "appliedDate") {
+        query = { appliedDate: 1 };
+      }
+
+      const result = await appliedScholarshipsCollection
+        .find()
+        .sort(query)
+        .toArray();
       res.send(result);
     });
 
