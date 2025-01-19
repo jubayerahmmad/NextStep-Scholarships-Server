@@ -17,7 +17,7 @@ const verifyToken = (req, res, next) => {
     return res.status(401).send({ message: "Unauthorized User" });
   }
   const token = req.headers?.authorization.split(" ")[1];
-  // console.log(token);
+
   jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).send({ message: "Unauthorized User" });
@@ -39,9 +39,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // await client.connect();
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
