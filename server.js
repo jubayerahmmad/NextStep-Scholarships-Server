@@ -88,9 +88,7 @@ async function run() {
       if (sort) {
         query.role = sort;
       }
-
       const result = await usersCollection.find(query).toArray();
-
       res.send(result);
     });
 
@@ -99,6 +97,21 @@ async function run() {
       const email = req?.params?.email;
       const query = { email };
       const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+
+    // update user
+    app.patch("/update-user/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const { name, image } = req.body;
+      const filter = { email };
+      const updatedDoc = {
+        $set: {
+          name,
+          image,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
