@@ -428,11 +428,33 @@ async function run() {
       res.send(result);
     });
 
-    // get reviews by specific id
+    // get reviews by specific id(for specific scholarshi[] details page)
     app.get("/reviews/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { scholarshipId: id };
       const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+    // get reviews by specific id(for my reviews)
+    app.get("/my-review/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollection.findOne(query);
+      res.send(result);
+    });
+
+    //update review
+    app.patch("/update-review/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const { rating, review } = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          rating,
+          review,
+        },
+      };
+      const result = await reviewsCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
