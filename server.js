@@ -208,15 +208,10 @@ async function run() {
     );
 
     // total data
-    app.get(
-      "/total-scholarships",
-      verifyToken,
-      verifyOnlyAdmin,
-      async (req, res) => {
-        const total = await allScholarshipsCollection.estimatedDocumentCount();
-        res.send({ total });
-      }
-    );
+    app.get("/total-scholarships", async (req, res) => {
+      const total = await allScholarshipsCollection.estimatedDocumentCount();
+      res.send({ total });
+    });
 
     // get all scholarship
     app.get("/scholarships", async (req, res) => {
