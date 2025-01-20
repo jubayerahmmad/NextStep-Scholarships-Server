@@ -545,14 +545,46 @@ async function run() {
         (total, rating) => total + rating.rating,
         0
       );
-
       const avgRating = ratings / totalReviews;
+
+      const chartData = await appliedScholarshipsCollection
+        .aggregate([
+          {
+            $group: {
+              _id: {
+                date: {
+                  $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: { $toDate: "$appliedDate" },
+                  },
+                },
+              },
+              feesEarned: { $sum: "$applicationFees" },
+              totalApplications: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              appliedDate: "$_id.date",
+              feesEarned: 1,
+              totalApplications: 1,
+            },
+          },
+          {
+            $sort: { date: 1 },
+          },
+        ])
+        .toArray();
+
+      // console.log(chartData);
 
       res.send({
         totalScholarships,
         totalApplications,
         totalReviews,
         avgRating,
+        chartData,
       });
     });
   } finally {
