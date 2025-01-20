@@ -156,9 +156,18 @@ async function run() {
       res.send(result);
     });
 
+    // total data
+    app.get("/total-scholarships", async (req, res) => {
+      const total = await allScholarshipsCollection.estimatedDocumentCount();
+      res.send({ total });
+    });
+
     // get all scholarship
     app.get("/scholarships", async (req, res) => {
-      const { search } = req.query;
+      let { search, page, limit } = req?.query;
+
+      page = parseInt(page);
+      limit = parseInt(limit);
 
       let query = {};
 
@@ -172,8 +181,11 @@ async function run() {
           ],
         };
       }
-
-      const result = await allScholarshipsCollection.find(query).toArray();
+      const result = await allScholarshipsCollection
+        .find(query)
+        .skip(page * limit)
+        .limit(limit)
+        .toArray();
       res.send(result);
     });
 
