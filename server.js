@@ -50,7 +50,7 @@ async function run() {
     const appliedScholarshipsCollection = db.collection("applied-scholarships");
     const reviewsCollection = db.collection("reviews");
 
-    // verify only admin
+    // verify only admin middleware
     const verifyOnlyAdmin = async (req, res, next) => {
       const email = req.user?.email;
       const query = { email };
@@ -62,12 +62,13 @@ async function run() {
       }
       next();
     };
-    // verify admin-moderator
+
+    // verify admin-moderator middleware
     const verifyAdminModerator = async (req, res, next) => {
       const email = req.user?.email;
       const query = { email };
       const user = await usersCollection.findOne(query);
-      if (!user || user.role !== "Admin" || user.role !== "Moderator") {
+      if (!user || (user.role !== "Admin" && user.role !== "Moderator")) {
         return res.status(403).send({
           message: "Forbidden Access. Admin, Moderator Access Only",
         });
@@ -196,16 +197,26 @@ async function run() {
     );
 
     // get all scholarship for admins
-    app.get("/scholarship-admin-access", verifyToken, async (req, res) => {
-      const result = await allScholarshipsCollection.find().toArray();
-      res.send(result);
-    });
+    app.get(
+      "/scholarship-admin-access",
+      verifyToken,
+      verifyAdminModerator,
+      async (req, res) => {
+        const result = await allScholarshipsCollection.find().toArray();
+        res.send(result);
+      }
+    );
 
     // total data
-    app.get("/total-scholarships", async (req, res) => {
-      const total = await allScholarshipsCollection.estimatedDocumentCount();
-      res.send({ total });
-    });
+    app.get(
+      "/total-scholarships",
+      verifyToken,
+      verifyOnlyAdmin,
+      async (req, res) => {
+        const total = await allScholarshipsCollection.estimatedDocumentCount();
+        res.send({ total });
+      }
+    );
 
     // get all scholarship
     app.get("/scholarships", async (req, res) => {
@@ -356,23 +367,28 @@ async function run() {
     });
 
     // get all applied scholarships
-    app.get("/applied-scholarships", verifyToken, async (req, res) => {
-      const date = req.query?.date;
+    app.get(
+      "/applied-scholarships",
+      verifyToken,
+      verifyAdminModerator,
+      async (req, res) => {
+        const date = req.query?.date;
 
-      let query = {};
-      if (date === "applicationDeadline") {
-        query = { applicationDeadline: 1 };
-      }
-      if (date === "appliedDate") {
-        query = { appliedDate: 1 };
-      }
+        let query = {};
+        if (date === "applicationDeadline") {
+          query = { applicationDeadline: 1 };
+        }
+        if (date === "appliedDate") {
+          query = { appliedDate: 1 };
+        }
 
-      const result = await appliedScholarshipsCollection
-        .find()
-        .sort(query)
-        .toArray();
-      res.send(result);
-    });
+        const result = await appliedScholarshipsCollection
+          .find()
+          .sort(query)
+          .toArray();
+        res.send(result);
+      }
+    );
 
     // get applied scholarship by id
     app.get("/applied-scholarship/:id", verifyToken, async (req, res) => {
@@ -416,23 +432,28 @@ async function run() {
     });
 
     // change status of application
-    app.patch("/change-status/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const { status } = req.body;
-      const filter = { _id: new ObjectId(id) };
+    app.patch(
+      "/change-status/:id",
+      verifyToken,
+      verifyAdminModerator,
+      async (req, res) => {
+        const id = req.params.id;
+        const { status } = req.body;
+        const filter = { _id: new ObjectId(id) };
 
-      const updatedDoc = {
-        $set: {
-          status,
-        },
-      };
+        const updatedDoc = {
+          $set: {
+            status,
+          },
+        };
 
-      const result = await appliedScholarshipsCollection.updateOne(
-        filter,
-        updatedDoc
-      );
-      res.send(result);
-    });
+        const result = await appliedScholarshipsCollection.updateOne(
+          filter,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
 
     // delete application
     app.delete("/delete-application/:id", verifyToken, async (req, res) => {
@@ -443,21 +464,26 @@ async function run() {
     });
 
     // add feedback
-    app.patch("/add-feedback/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const { feedback } = req.body;
-      const filter = { _id: new ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          feedback,
-        },
-      };
-      const result = await appliedScholarshipsCollection.updateOne(
-        filter,
-        updatedDoc
-      );
-      res.send(result);
-    });
+    app.patch(
+      "/add-feedback/:id",
+      verifyToken,
+      verifyAdminModerator,
+      async (req, res) => {
+        const id = req.params.id;
+        const { feedback } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            feedback,
+          },
+        };
+        const result = await appliedScholarshipsCollection.updateOne(
+          filter,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
 
     //  ------------REVIEWS APIs------------
 
@@ -479,7 +505,7 @@ async function run() {
       res.send(result);
     });
     // get all reviews
-    app.get("/reviews", verifyToken, async (req, res) => {
+    app.get("/reviews", verifyToken, verifyAdminModerator, async (req, res) => {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     });
