@@ -49,6 +49,32 @@ async function run() {
     const allScholarshipsCollection = db.collection("all-scholarships");
     const appliedScholarshipsCollection = db.collection("applied-scholarships");
     const reviewsCollection = db.collection("reviews");
+
+    // verify only admin
+    const verifyOnlyAdmin = async (req, res, next) => {
+      const email = req.user?.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      if (!user || user.role !== "Admin") {
+        return res.status(403).send({
+          message: "Forbidden Access. Admin Access Only",
+        });
+      }
+      next();
+    };
+    // verify admin-moderator
+    const verifyAdminModerator = async (req, res, next) => {
+      const email = req.user?.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      if (!user || user.role !== "Admin" || user.role !== "Moderator") {
+        return res.status(403).send({
+          message: "Forbidden Access. Admin, Moderator Access Only",
+        });
+      }
+      next();
+    };
+
     // -----JWT------
     app.post("/jwt", (req, res) => {
       const userEmail = req.body;
@@ -76,18 +102,23 @@ async function run() {
     });
 
     //  get all user data
-    app.get("/all-users/:email", verifyToken, async (req, res) => {
-      const email = req?.params?.email;
-      const sort = req.query.sort;
+    app.get(
+      "/all-users/:email",
+      verifyToken,
+      verifyOnlyAdmin,
+      async (req, res) => {
+        const email = req?.params?.email;
+        const sort = req.query.sort;
 
-      let query = { email: { $ne: email } };
+        let query = { email: { $ne: email } };
 
-      if (sort) {
-        query.role = sort;
+        if (sort) {
+          query.role = sort;
+        }
+        const result = await usersCollection.find(query).toArray();
+        res.send(result);
       }
-      const result = await usersCollection.find(query).toArray();
-      res.send(result);
-    });
+    );
 
     // get a specific user  data by email
     app.get("/user/:email", async (req, res) => {
@@ -135,20 +166,34 @@ async function run() {
     });
 
     // delete user
-    app.delete("/delete-user/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
-      res.send(result);
-    });
+    app.delete(
+      "/delete-user/:id",
+      verifyToken,
+      verifyOnlyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const result = await usersCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      }
+    );
 
     //  ----------- ALL SCHOLARSHIPS APIs -----------
 
     // save a scholarship
-    app.post("/add-scholarship", verifyToken, async (req, res) => {
-      const scholarshipData = req.body;
-      const result = await allScholarshipsCollection.insertOne(scholarshipData);
-      res.send(result);
-    });
+    app.post(
+      "/add-scholarship",
+      verifyToken,
+      verifyAdminModerator,
+      async (req, res) => {
+        const scholarshipData = req.body;
+        const result = await allScholarshipsCollection.insertOne(
+          scholarshipData
+        );
+        res.send(result);
+      }
+    );
 
     // get all scholarship for admins
     app.get("/scholarship-admin-access", verifyToken, async (req, res) => {
@@ -208,47 +253,57 @@ async function run() {
     });
 
     // update scholarship
-    app.put("/update-scholarship/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const updatedData = req.body;
-      const filter = { _id: new ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          description: updatedData.description,
-          applicationFees: updatedData.applicationFees,
-          universityName: updatedData.universityName,
-          subjectCategory: updatedData.subjectCategory,
-          applicationDeadline: updatedData.applicationDeadline,
-          scholarshipCategory: updatedData.scholarshipCategory,
-          city: updatedData.city,
-          country: updatedData.country,
-          scholarshipName: updatedData.scholarshipName,
-          subjectName: updatedData.subjectName,
-          stipend: updatedData.stipend,
-          worldRank: updatedData.worldRank,
-          degree: updatedData.degree,
-          tuitionFees: updatedData.tuitionFees,
-          serviceCharge: updatedData.serviceCharge,
-          email: updatedData.email,
-          postDate: updatedData.postDate,
-          image: updatedData.image,
-        },
-      };
-      const result = await allScholarshipsCollection.updateOne(
-        filter,
-        updatedDoc
-      );
+    app.put(
+      "/update-scholarship/:id",
+      verifyToken,
+      verifyAdminModerator,
+      async (req, res) => {
+        const id = req.params.id;
+        const updatedData = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            description: updatedData.description,
+            applicationFees: updatedData.applicationFees,
+            universityName: updatedData.universityName,
+            subjectCategory: updatedData.subjectCategory,
+            applicationDeadline: updatedData.applicationDeadline,
+            scholarshipCategory: updatedData.scholarshipCategory,
+            city: updatedData.city,
+            country: updatedData.country,
+            scholarshipName: updatedData.scholarshipName,
+            subjectName: updatedData.subjectName,
+            stipend: updatedData.stipend,
+            worldRank: updatedData.worldRank,
+            degree: updatedData.degree,
+            tuitionFees: updatedData.tuitionFees,
+            serviceCharge: updatedData.serviceCharge,
+            email: updatedData.email,
+            postDate: updatedData.postDate,
+            image: updatedData.image,
+          },
+        };
+        const result = await allScholarshipsCollection.updateOne(
+          filter,
+          updatedDoc
+        );
 
-      res.send(result);
-    });
+        res.send(result);
+      }
+    );
 
     // delete specific scholarship by id
-    app.delete("/delete-scholarship/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await allScholarshipsCollection.deleteOne(query);
-      res.send(result);
-    });
+    app.delete(
+      "/delete-scholarship/:id",
+      verifyToken,
+      verifyAdminModerator,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await allScholarshipsCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
     //  --------PAYMENT----------
     app.post("/create-payment-intent", verifyToken, async (req, res) => {
@@ -267,6 +322,7 @@ async function run() {
     });
 
     // ------------APPLIED SCHOLARSHIPS APIs-----------
+
     // save applied scholarship details
     app.post("/applied-scholarships", verifyToken, async (req, res) => {
       const applyData = req.body;
@@ -437,7 +493,7 @@ async function run() {
       res.send(result);
     });
 
-    // get reviews by specific id(for specific scholarshi[] details page)
+    // get reviews by specific id(for specific scholarship details page)
     app.get("/reviews/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { scholarshipId: id };
@@ -473,6 +529,31 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await reviewsCollection.deleteOne(query);
       res.send(result);
+    });
+
+    // --------ADMIN STATS-------
+
+    app.get("/admin-stats", verifyToken, verifyOnlyAdmin, async (req, res) => {
+      const totalScholarships =
+        await allScholarshipsCollection.estimatedDocumentCount();
+      const totalApplications =
+        await appliedScholarshipsCollection.estimatedDocumentCount();
+      const totalReviews = await reviewsCollection.estimatedDocumentCount();
+
+      const reviews = await reviewsCollection.find().toArray();
+      const ratings = reviews.reduce(
+        (total, rating) => total + rating.rating,
+        0
+      );
+
+      const avgRating = ratings / totalReviews;
+
+      res.send({
+        totalScholarships,
+        totalApplications,
+        totalReviews,
+        avgRating,
+      });
     });
   } finally {
     // Ensures that the client will close when you finish/error
