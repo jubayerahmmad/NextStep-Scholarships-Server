@@ -233,7 +233,35 @@ async function run() {
         };
       }
       const result = await allScholarshipsCollection
-        .find(query)
+        .aggregate([
+          {
+            $match: query,
+          },
+          {
+            $addFields: {
+              stringifiedId: { $toString: "$_id" },
+            },
+          },
+          {
+            $lookup: {
+              from: "reviews",
+              localField: "stringifiedId",
+              foreignField: "scholarshipId",
+              as: "reviews",
+            },
+          },
+          {
+            $addFields: {
+              averageRating: { $avg: "$reviews.rating" },
+              numberOfReviews: { $size: "$reviews" },
+            },
+          },
+          {
+            $project: {
+              reviews: 0,
+            },
+          },
+        ])
         .skip(page * limit)
         .limit(limit)
         .toArray();
@@ -243,9 +271,38 @@ async function run() {
     //TODO: get top 6 scholarship based on lowest application fees and  latest postedDate
     app.get("/top-scholarships", async (req, res) => {
       const result = await allScholarshipsCollection
-        .find()
-        .limit(6)
-        .sort({ applicationFees: 1, postDate: -1 })
+        .aggregate([
+          {
+            $addFields: {
+              stringifiedId: { $toString: "$_id" },
+            },
+          },
+          {
+            $lookup: {
+              from: "reviews", // db name of the foriegnField
+              localField: "stringifiedId",
+              foreignField: "scholarshipId",
+              as: "reviews",
+            },
+          },
+          {
+            $addFields: {
+              averageRating: { $avg: "$reviews.rating" },
+              numberOfReviews: { $size: "$reviews" },
+            },
+          },
+          {
+            $sort: { applicationFees: 1, postDate: -1 },
+          },
+          {
+            $limit: 6,
+          },
+          {
+            $project: {
+              reviews: 0,
+            },
+          },
+        ])
         .toArray();
       res.send(result);
     });
@@ -323,7 +380,6 @@ async function run() {
           enabled: true,
         },
       });
-      // console.log(paymentIntent);
       res.send(client_secret);
     });
 
