@@ -132,15 +132,22 @@ async function run() {
     // update user
     app.patch("/update-user/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
-      const { name, image } = req.body;
+      const { name, image, phone, address } = req.body;
       const filter = { email };
       const updatedDoc = {
         $set: {
           name,
           image,
+          phone,
+          address,
         },
       };
-      const result = await usersCollection.updateOne(filter, updatedDoc);
+      const options = { upsert: true };
+      const result = await usersCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
       res.send(result);
     });
 
@@ -556,7 +563,7 @@ async function run() {
       res.send(result);
     });
     // get all reviews
-    app.get("/reviews", verifyToken, verifyAdminModerator, async (req, res) => {
+    app.get("/reviews", async (req, res) => {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     });
