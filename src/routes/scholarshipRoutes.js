@@ -45,7 +45,7 @@ router.get("/total-scholarships", async (req, res) => {
 });
 
 // Get all scholarships with pagination and search
-router.get("/scholarships", async (req, res) => {
+router.get("/all-scholarships", async (req, res) => {
   const { search, page, limit } = req.query;
   const result = await getAllScholarships(
     req.db,

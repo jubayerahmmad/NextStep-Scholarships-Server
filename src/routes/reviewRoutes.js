@@ -22,7 +22,7 @@ router.post("/add-review/:id", verifyToken, async (req, res) => {
 });
 
 // Get all reviews
-router.get("/reviews", async (req, res) => {
+router.get("/all-reviews", async (req, res) => {
   const result = await getAllReviews(req.db);
   res.send(result);
 });
