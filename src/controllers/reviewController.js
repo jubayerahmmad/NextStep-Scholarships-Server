@@ -10,7 +10,7 @@ const addReview = async (db, id, reviewData) => {
   const review = await db.collection("reviews").findOne(query);
 
   if (review) {
-    throw new Error("Review Already Given!");
+    return res.status(400).send({ message: "Review Already Given!" });
   }
   return await db.collection("reviews").insertOne(reviewData);
 };

@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { verifyToken, verifyOnlyAdmin } = require("../middleware/auth");
+const {
+  verifyToken,
+  verifyOnlyAdmin,
+  verifyAdminModerator,
+} = require("../middleware/auth");
 const {
   saveApplication,
   getUserApplications,
@@ -28,7 +32,7 @@ router.get("/my-applications/:email", verifyToken, async (req, res) => {
 router.get(
   "/applied-scholarships",
   verifyToken,
-  verifyOnlyAdmin,
+  verifyAdminModerator,
   async (req, res) => {
     const result = await getAllApplications(req.db, req.query.date);
     res.send(result);
@@ -51,7 +55,7 @@ router.patch("/update-application/:id", verifyToken, async (req, res) => {
 router.patch(
   "/change-status/:id",
   verifyToken,
-  verifyOnlyAdmin,
+  verifyAdminModerator,
   async (req, res) => {
     const result = await changeApplicationStatus(
       req.db,
@@ -77,7 +81,7 @@ router.delete(
 router.patch(
   "/add-feedback/:id",
   verifyToken,
-  verifyOnlyAdmin,
+  verifyAdminModerator,
   async (req, res) => {
     const result = await addFeedback(req.db, req.params.id, req.body.feedback);
     res.send(result);

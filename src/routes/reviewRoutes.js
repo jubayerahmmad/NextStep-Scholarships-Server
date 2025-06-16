@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { verifyToken, verifyOnlyAdmin } = require("../middleware/auth");
+const { verifyToken } = require("../middleware/auth");
 const {
   addReview,
   getAllReviews,
@@ -17,7 +17,7 @@ router.post("/add-review/:id", verifyToken, async (req, res) => {
     const result = await addReview(req.db, req.params.id, req.body);
     res.send(result);
   } catch (error) {
-    res.status(400).send({ message: error.message });
+    res.status(400).send({ message: error.message || "Error adding review" });
   }
 });
 
@@ -33,7 +33,7 @@ router.get("/my-reviews/:email", verifyToken, async (req, res) => {
   res.send(result);
 });
 
-// Get reviews for specific scholarship
+// Get reviews by specific id(for specific scholarship details page)
 router.get("/reviews/:id", verifyToken, async (req, res) => {
   const result = await getScholarshipReviews(req.db, req.params.id);
   res.send(result);

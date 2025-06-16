@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const { ObjectId } = require("mongodb");
 
 const verifyToken = (req, res, next) => {
   if (!req.headers.authorization) {
