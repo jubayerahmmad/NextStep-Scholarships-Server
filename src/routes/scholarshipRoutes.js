@@ -29,7 +29,7 @@ router.post(
 
 // Get all scholarships for admin
 router.get(
-  "/all-scholarships",
+  "/scholarship-admin-access",
   verifyToken,
   verifyAdminModerator,
   async (req, res) => {
